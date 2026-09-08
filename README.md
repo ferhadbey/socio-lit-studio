@@ -1,24 +1,19 @@
 # socio-lit-studio
 
-Sosyoloji ve yakın alanlarda **makale tarama**, **dergi eşleştirme** ve **araştırma taslağı** üreten yardımcı program.
+Sosyoloji ve yakin alanlarda makale tarama, dergi eslestirme ve arastirma **iskeleti**.
 
-Kaynak havuzu: [OpenAlex](https://openalex.org) (ücretsiz akademik grafik). Anahtar gerekmez; nezaket için e-posta önerilir.
+Kaynak havuzu: [OpenAlex](https://openalex.org) + senin lokal PDF klasorun.
 
-## Bu ne yapar, ne yapmaz
+## Sert kural
 
-Yapar:
-- Anahtar kelime ve cümlelerle makale arar
-- Sosyoloji + yakın dergileri (kaynak / journal) puanlar
-- Boşluk notu çıkarır (gap: literatürde az işlenen kesişim)
-- Gerçek özetlerden literatür taslağı ve IMRaD iskeleti üretir
-- BibTeX dışa aktarır
+- Uydurma kaynak yok
+- Uydurma metin ici referans yok
+- Taslak, yalnizca `scan` ve `ingest` ile fiilen bulunan kayitlari kataloglar
+- Katalogda yoksa atif dusulmez
 
-Yapmaz:
-- Sahte veri, sahte anket, sahte bulgu
-- Uydurma kaynak
-- Dergiye gönderilmeye hazır nihaî makale iddiası
+## Bu ne yapmaz
 
-Program **asistan**. Yöntem, veri ve argüman sana ait. Her DOI kontrol edilmeli.
+Sahte veri, sahte bulgu, dergiye gonderilmeye hazir nihai makale, Grok ile kaynak uydurma.
 
 ## Kurulum
 
@@ -31,24 +26,23 @@ pip install -e .
 copy .env.example .env
 ```
 
-`.env` içine `OPENALEX_MAILTO=sen@eposta.com` yaz.
+`.env` icine `OPENALEX_MAILTO=sen@eposta.com` yaz.
 
-## Kullanım
+## Lokal PDF
 
-`queries/example.yaml` dosyasını kendi anahtarlarınla düzenle.
+Public GitHub'a telifli makale yukleme. PDF'leri kendi diskinde tut:
+
+1. Dosyalari `data/pdfs/` icine kopyala
+2. `socio-lit ingest --pdf-dir data/pdfs --out outputs/local.json`
+
+`*.pdf` gitignore'dadir. Repo sadece cikarilan ozet katalogunu (`outputs/local.json`) kullanir.
+
+## Kullanim
 
 ```bash
-# Makale + dergi tarama
 socio-lit scan --query queries/example.yaml --out outputs/scan.json
-
-# Dergi önerisi
+socio-lit ingest --pdf-dir data/pdfs --out outputs/local.json
 socio-lit journals --query queries/example.yaml --out outputs/journals.json
-
-# Taslak (yalnızca bulunan kaynaklara dayanır)
-socio-lit draft --query queries/example.yaml --scan outputs/scan.json --out outputs/draft.md
-
-# Kaynakça
-socio-lit bibtex --scan outputs/scan.json --out outputs/refs.bib
+socio-lit draft --query queries/example.yaml --scan outputs/scan.json --local outputs/local.json --out outputs/draft.md
+socio-lit bibtex --scan outputs/scan.json --local outputs/local.json --out outputs/refs.bib
 ```
-
-İsteğe bağlı: `XAI_API_KEY` varsa taslak dilini Grok ile düzeltir; yoksa şablonla yazar. Anahtar yokken de tarama çalışır.
