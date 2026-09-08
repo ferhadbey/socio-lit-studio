@@ -20,7 +20,7 @@ def to_bibtex(works: list[dict[str, Any]]) -> str:
                     f"  title = {{{title}}},",
                     f"  journal = {{{journal}}},",
                     f"  year = {{{year}}},",
-                    f"  doi = {{{doi}}}",",
+                    f"  doi = {{{doi}}},",
                     "}",
                 ]
             )
