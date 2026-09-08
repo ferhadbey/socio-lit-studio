@@ -7,7 +7,7 @@ import httpx
 from socio_lit_studio.config import Settings, settings
 from socio_lit_studio.query import ResearchQuery
 
-# OpenAlex sociology concept (legacy concepts still useful as a soft filter).
+# OpenAlex sociology concept id.
 SOCIOLOGY_CONCEPT = "C144024400"
 
 
@@ -31,7 +31,7 @@ class OpenAlexClient:
         filters = [
             f"from_publication_date:{query.year_from}-01-01",
             "type:article",
-            f"concepts.id:{SOCIOLOGY_CONCEPT}|concepts.id:C162324750",  # sociology | social science
+            f"concepts.id:{SOCIOLOGY_CONCEPT}",
         ]
         data = self._get(
             "/works",
