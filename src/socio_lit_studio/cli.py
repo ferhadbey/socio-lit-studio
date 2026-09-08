@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Optional
 
 import typer
 
 from socio_lit_studio.bibtex import to_bibtex
 from socio_lit_studio.draft import build_draft
 from socio_lit_studio.openalex import OpenAlexClient
+from socio_lit_studio.pdfs import ingest_pdf_dir, load_local
 from socio_lit_studio.query import load_query
 from socio_lit_studio.rank import rank_journals, rank_works
 
-app = typer.Typer(help="Sosyoloji literatür tarama ve taslak asistanı")
+app = typer.Typer(help="Sosyoloji literatur tarama ve taslak asistani")
 
 
 def _dump(path: Path, payload: object) -> None:
@@ -47,24 +49,48 @@ def journals(query: Path = typer.Option(..., exists=True), out: Path = typer.Opt
 
 
 @app.command()
+def ingest(
+    pdf_dir: Path = typer.Option(Path("data/pdfs"), exists=True, file_okay=False),
+    out: Path = typer.Option(Path("outputs/local.json")),
+) -> None:
+    """Read local PDFs. Does not upload them to GitHub."""
+    records = ingest_pdf_dir(pdf_dir, out)
+    typer.echo(f"{len(records)} PDF -> {out}")
+
+
+@app.command()
 def draft(
     query: Path = typer.Option(..., exists=True),
     scan: Path = typer.Option(..., exists=True),
+    local: Optional[Path] = typer.Option(None),
     out: Path = typer.Option(Path("outputs/draft.md")),
 ) -> None:
     q = load_query(query)
     payload = _load_scan(scan)
-    text = build_draft(q, payload.get("works") or [], payload.get("journals") or [])
+    local_works = load_local(local) if local else []
+    text = build_draft(
+        q,
+        payload.get("works") or [],
+        payload.get("journals") or [],
+        local_works,
+    )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(text, encoding="utf-8")
     typer.echo(str(out))
 
 
 @app.command()
-def bibtex(scan: Path = typer.Option(..., exists=True), out: Path = typer.Option(Path("outputs/refs.bib"))) -> None:
+def bibtex(
+    scan: Path = typer.Option(..., exists=True),
+    local: Optional[Path] = typer.Option(None),
+    out: Path = typer.Option(Path("outputs/refs.bib")),
+) -> None:
     payload = _load_scan(scan)
+    works = list(payload.get("works") or [])
+    if local:
+        works.extend(load_local(local))
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(to_bibtex(payload.get("works") or []), encoding="utf-8")
+    out.write_text(to_bibtex(works), encoding="utf-8")
     typer.echo(str(out))
 
 
